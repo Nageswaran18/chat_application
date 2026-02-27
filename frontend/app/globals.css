@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Dashboard: fill viewport so no black bar at bottom */
+.app-shell-full {
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.card-full {
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  background: var(--background);
+}
+
+@media (prefers-color-scheme: dark) {
+  .card-full {
+    background: #020617;
+  }
+}
+
+/* Hide browser's native search clear so only our custom clear button shows */
+.search-bar-input::-webkit-search-cancel-button,
+.search-bar-input::-webkit-search-decoration {
+  appearance: none;
+  -webkit-appearance: none;
+}
+.search-bar-input::-ms-clear {
+  display: none;
+}
