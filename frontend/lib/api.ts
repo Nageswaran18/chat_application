@@ -182,5 +182,33 @@ export const users = {
     put<UserResponse>(`/users/${userId}`, body),
 };
 
+// --- Messages API (for listing; sending is via WebSocket) ---
+
+export interface MessageResponse {
+  id: number;
+  sender_id: number;
+  receiver_id: number;
+  content: string;
+  created_at: string;
+}
+
+export const messages = {
+  /** GET /messages/ — list messages for current user (auth required). Use to verify DB in Network tab. */
+  list: (params?: { with_user_id?: number; limit?: number }) =>
+    get<MessageResponse[]>("/messages/", params as Record<string, number>),
+};
+
+/**
+ * WebSocket URL for chat. Pass the JWT token (e.g. from localStorage).
+ * Backend mounts WS at root /ws/chat (not under /api/v1), so we strip API prefix.
+ */
+export function getWebSocketChatUrl(token: string): string {
+  let base = getBaseUrl();
+  if (!base) return "";
+  base = base.replace(/\/api\/v1\/?$/, ""); // WS is at root, not /api/v1
+  const wsBase = base.replace(/^http/, "ws");
+  return `${wsBase}/ws/chat?token=${encodeURIComponent(token)}`;
+}
+
 /** Token key for localStorage; use when saving/reading token outside this module */
 export { ACCESS_TOKEN_KEY };

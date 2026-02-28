@@ -14,6 +14,7 @@ from sqlalchemy.pool import NullPool
 from alembic import context
 from app.db.database import Base, DATABASE_URL
 from app.models.user import User  # noqa: F401 - register model with Base
+from app.models.message import Message  # noqa: F401 - register model with Base
 
 config = context.config
 if config.config_file_name is not None:
