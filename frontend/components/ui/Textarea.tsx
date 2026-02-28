@@ -46,7 +46,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           ref={ref}
           id={id}
-          className={`w-full rounded-xl border border-slate-300 dark:border-slate-500/50 bg-slate-50 dark:bg-slate-900/80 text-slate-900 dark:text-inherit px-3.5 py-2.5 text-[0.9375rem] outline-none transition placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-60 disabled:cursor-not-allowed resize-none ${textareaClassName}`}
+          className={`font-sans w-full rounded-xl border border-slate-300 dark:border-slate-500/50 bg-slate-50 dark:bg-slate-900/80 text-slate-900 dark:text-inherit px-3.5 py-2.5 text-[0.9375rem] outline-none transition placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-60 disabled:cursor-not-allowed resize-none ${textareaClassName}`}
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-error` : undefined}
           {...rest}

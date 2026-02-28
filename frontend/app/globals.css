@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: add .dark on <html> to enable (see layout script + ThemeProvider) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
+  --background: #fafafa;
   --foreground: #171717;
+}
+
+.dark,
+[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
 }
 
 @theme inline {
@@ -12,17 +21,10 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Dashboard: fill viewport so no black bar at bottom */
@@ -40,12 +42,6 @@ body {
   width: 100%;
   min-height: 0;
   background: var(--background);
-}
-
-@media (prefers-color-scheme: dark) {
-  .card-full {
-    background: #020617;
-  }
 }
 
 /* Hide browser's native search clear so only our custom clear button shows */

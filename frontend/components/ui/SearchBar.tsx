@@ -63,7 +63,7 @@ const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
           autoComplete="off"
           placeholder={placeholder}
           value={value}
-          className={`search-bar-input w-full min-w-0 rounded-xl border border-slate-300 dark:border-slate-500/50 bg-slate-50 dark:bg-slate-900/80 text-slate-900 dark:text-inherit pl-12 pr-10 py-2.5 text-[0.9375rem] outline-none transition placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-60 disabled:cursor-not-allowed ${size === "sm" ? "py-2 text-xs" : ""} ${inputClassName}`}
+          className={`search-bar-input font-sans w-full min-w-0 rounded-xl border border-slate-300 dark:border-slate-500/50 bg-slate-50 dark:bg-slate-900/80 text-slate-900 dark:text-inherit pl-12 pr-10 py-2.5 text-[0.9375rem] outline-none transition placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-60 disabled:cursor-not-allowed ${size === "sm" ? "py-2 text-xs" : ""} ${inputClassName}`}
           aria-label={rest["aria-label"] ?? placeholder}
           {...rest}
         />

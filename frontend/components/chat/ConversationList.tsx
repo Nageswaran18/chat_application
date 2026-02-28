@@ -30,9 +30,9 @@ export default function ConversationList({
     >
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-          <div className="rounded-full bg-slate-800/80 p-4 mb-3">
+          <div className="rounded-full bg-zinc-200 dark:bg-zinc-800 p-4 mb-3">
             <svg
-              className="h-8 w-8 text-slate-500"
+              className="h-8 w-8 text-zinc-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -46,8 +46,8 @@ export default function ConversationList({
               />
             </svg>
           </div>
-          <p className="text-sm font-medium text-slate-300">{emptyMessage}</p>
-          <p className="text-[0.7rem] text-slate-500 mt-1">
+          <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">{emptyMessage}</p>
+          <p className="text-[0.7rem] text-zinc-500 mt-1">
             Start a new conversation or try another filter
           </p>
         </div>
@@ -61,17 +61,17 @@ export default function ConversationList({
               onClick={() => onSelect(item.id)}
               className={
                 isActive
-                  ? "w-full rounded-xl px-3 py-2.5 text-left text-xs transition-colors bg-indigo-500/15 text-slate-100 border border-indigo-500/70"
-                  : "w-full rounded-xl px-3 py-2.5 text-left text-xs transition-colors bg-slate-900/60 text-slate-200 border border-slate-800/80 hover:bg-slate-900"
+                  ? "w-full rounded-xl px-3 py-2.5 text-left text-xs transition-colors bg-emerald-500/15 text-zinc-900 dark:text-zinc-100 border border-emerald-500/50"
+                  : "w-full rounded-xl px-3 py-2.5 text-left text-xs transition-colors bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-800"
               }
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="font-medium">{item.title}</span>
-                <span className="text-[0.65rem] text-slate-500 shrink-0 ml-2">
+                <span className="text-[0.65rem] text-zinc-500 shrink-0 ml-2">
                   {item.time}
                 </span>
               </div>
-              <p className="truncate text-[0.7rem] text-slate-400">{item.preview}</p>
+              <p className="truncate text-[0.7rem] text-zinc-500 dark:text-zinc-400">{item.preview}</p>
             </button>
           );
         })

@@ -22,7 +22,7 @@ export default function ConversationFilterTabs({
 }: ConversationFilterTabsProps) {
   return (
     <nav
-      className={`flex flex-wrap gap-2 text-[0.7rem] font-medium text-slate-500 ${className}`}
+      className={`flex flex-wrap gap-2 text-[0.7rem] font-medium text-zinc-500 ${className}`}
       role="tablist"
       aria-label="Conversation filter"
     >
@@ -37,8 +37,8 @@ export default function ConversationFilterTabs({
             onClick={() => onChange(filter.value)}
             className={
               isActive
-                ? "rounded-full bg-indigo-500/15 text-slate-100 px-3 py-1 border border-indigo-500/60"
-                : "rounded-full bg-slate-900/70 px-3 py-1 border border-slate-800/80 hover:bg-slate-800/80 hover:text-slate-200"
+                ? "rounded-full bg-emerald-500/15 text-zinc-900 dark:text-zinc-100 px-3 py-1 border border-emerald-500/50"
+                : "rounded-full bg-zinc-200 dark:bg-zinc-800/70 px-3 py-1 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200"
             }
           >
             {filter.label}

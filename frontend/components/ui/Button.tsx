@@ -20,13 +20,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "rounded-lg bg-indigo-500 text-slate-50 hover:bg-indigo-400 active:bg-indigo-500/90 border border-transparent shadow-sm shadow-indigo-900/40 disabled:bg-indigo-500/60 disabled:text-slate-200",
+    "rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 active:bg-emerald-600/90 border border-transparent shadow-sm shadow-emerald-900/30 disabled:bg-emerald-600/60 disabled:text-zinc-200",
   secondary:
-    "rounded-lg bg-slate-900/70 text-slate-100 border border-slate-700/80 hover:bg-slate-800/80 hover:border-slate-600/80 disabled:opacity-70",
+    "rounded-lg bg-zinc-200 text-zinc-900 border border-zinc-300 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-700 dark:hover:border-zinc-600 disabled:opacity-70",
   ghost:
-    "bg-transparent text-slate-300 hover:bg-slate-800/80 hover:text-slate-100 border border-transparent",
+    "bg-transparent text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 border border-transparent",
   icon:
-    "rounded-full bg-slate-900/80 border border-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800/90 flex items-center justify-center",
+    "rounded-full bg-zinc-200 border border-zinc-300 text-zinc-600 hover:bg-zinc-300 hover:text-zinc-900 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-700 flex items-center justify-center",
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -44,8 +44,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
 ) {
   const base =
     variant === "icon"
-      ? "h-9 w-9 text-xs"
-      : "inline-flex items-center justify-center";
+      ? "h-9 w-9 text-xs font-sans"
+      : "inline-flex items-center justify-center font-sans";
   const variantClass = variantClasses[variant];
   const widthClass = fullWidth ? "w-full" : "";
 
