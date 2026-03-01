@@ -38,7 +38,7 @@ app.include_router(ws_chat.router, tags=["websocket"])
 
 Base.metadata.create_all(bind=engine)
 
-
+print("CORS ORIGINS:", settings.get_cors_origins_list())
 @app.get("/")
 def root():
     return {"message": "working", "docs": "/docs"}
