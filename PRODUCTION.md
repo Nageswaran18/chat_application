@@ -19,7 +19,12 @@ Set these in your host (e.g. Railway, Render, Fly.io, Docker, or server env). **
 | `ALGORITHM` | Optional; default HS256 | `HS256` |
 
 - **SECRET_KEY**: If you keep the default `change-me-in-production-...`, tokens are insecure. Always set a random key in production.
-- **CORS_ORIGINS**: Must include the exact origin(s) of your frontend (scheme + host + port if non-default). No trailing slash.
+- **CORS_ORIGINS**: Must include the **exact** origin(s) of your frontend (scheme + host, no trailing slash).
+  - **Render**: Dashboard → your backend service → Environment → add variable:
+    - **Key:** `CORS_ORIGINS`
+    - **Value:** `https://chat-application-alpha-liart.vercel.app`  
+    (or your actual Vercel URL; comma-separate if you have multiple, e.g. `https://app.com,https://www.app.com`)
+  - After adding or changing env vars, **redeploy** the backend so it picks them up.
 
 ### 2. Database
 

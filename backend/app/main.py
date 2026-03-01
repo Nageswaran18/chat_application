@@ -24,12 +24,16 @@ app = FastAPI(
     version="1.0.0",
 )
 
+cors_origins_list = settings.get_cors_origins_list()
+if not cors_origins_list:
+    print("WARNING: CORS_ORIGINS is empty. Set env var CORS_ORIGINS on Render to your frontend URL.", file=sys.stderr)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.get_cors_origins_list(),
+    allow_origins=cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 app.include_router(user_routes.router, prefix="/api/v1")
@@ -37,8 +41,6 @@ app.include_router(messages_routes.router, prefix="/api/v1")
 app.include_router(ws_chat.router, tags=["websocket"])
 
 Base.metadata.create_all(bind=engine)
-
-print("CORS ORIGINS:", settings.get_cors_origins_list())
 @app.get("/")
 def root():
     return {"message": "working", "docs": "/docs"}
