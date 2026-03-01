@@ -5,7 +5,6 @@ Use .env file in backend root for local development; set env vars in production.
 from functools import lru_cache
 from typing import List
 
-from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,15 +26,12 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
-    # CORS: comma-separated in env, e.g. "http://localhost:3000,http://localhost:3001"
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001"]
+    # CORS: comma-separated string in env (e.g. "http://localhost:3000,https://app.example.com")
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
 
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v: object) -> List[str]:
-        if isinstance(v, list):
-            return [x.strip() for x in v if x]
-        s = str(v).strip()
+    def get_cors_origins_list(self) -> List[str]:
+        """Return CORS_ORIGINS as a list for FastAPI CORSMiddleware. Use in main: allow_origins=settings.get_cors_origins_list()"""
+        s = (self.CORS_ORIGINS or "").strip()
         if not s:
             return []
         return [x.strip() for x in s.split(",") if x.strip()]
