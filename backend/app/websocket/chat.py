@@ -32,9 +32,9 @@ async def websocket_endpoint(
             try:
                 data = await websocket.receive_json()
             except Exception as e:
-                logger.warning("WS receive_json failed for user_id=%s: %s", user_id, e)
-                print(f"[WS] receive error (user_id={user_id}): {e}")  # visible in terminal
-                continue
+                # Connection closed or broken; exit loop so we stop calling receive()
+                logger.info("WS user_id=%s connection closed: %s", user_id, e)
+                break
             try:
                 receiver_id = int(data.get("receiver_id"))
             except (TypeError, ValueError) as e:
@@ -75,4 +75,5 @@ async def websocket_endpoint(
 
     except WebSocketDisconnect:
         logger.info("WS /ws/chat: user_id=%s disconnected", user_id)
+    finally:
         manager.disconnect(user_id)
