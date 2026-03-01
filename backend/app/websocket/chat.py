@@ -29,10 +29,19 @@ async def websocket_endpoint(
 
     try:
         while True:
-            data = await websocket.receive_json()
-            receiver_id = int(data["receiver_id"])
-            content = str(data["message"]).strip()
-
+            try:
+                data = await websocket.receive_json()
+            except Exception as e:
+                logger.warning("WS receive_json failed for user_id=%s: %s", user_id, e)
+                print(f"[WS] receive error (user_id={user_id}): {e}")  # visible in terminal
+                continue
+            try:
+                receiver_id = int(data.get("receiver_id"))
+            except (TypeError, ValueError) as e:
+                logger.warning("WS invalid receiver_id from user_id=%s: %s", user_id, e)
+                print(f"[WS] invalid receiver_id from user_id={user_id}: {data!r}")  # visible in terminal
+                continue
+            content = str(data.get("message", "")).strip()
             if not content:
                 continue
 

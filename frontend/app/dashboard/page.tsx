@@ -35,8 +35,10 @@ export default function Dashboard() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messagesByUserId, setMessagesByUserId] = useState<Record<string, ChatMessage[]>>({});
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [wsClosed, setWsClosed] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -78,42 +80,54 @@ export default function Dashboard() {
     });
   }, [currentUser]);
 
-  // WebSocket: connect when we have token and currentUser; receiver gets real-time updates
+  // WebSocket: connect when we have token and currentUser; reconnect on close so reply works
   useEffect(() => {
     if (typeof window === "undefined" || !currentUser) return;
     const token = localStorage.getItem(ACCESS_TOKEN_KEY);
     if (!token) return;
     const url = getWebSocketChatUrl(token);
     if (!url) return;
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data as string);
-        if (typeof data.sender_id === "number" && typeof data.content === "string") {
-          const senderKey = String(data.sender_id);
-          const newMsg: ChatMessage = {
-            senderId: data.sender_id,
-            content: data.content,
-            isOwn: false,
-          };
-          setMessagesByUserId((prev) => {
-            const existing = prev[senderKey] ?? [];
-            return {
-              ...prev,
-              [senderKey]: [...existing, newMsg],
+
+    const connect = () => {
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+      setWsClosed(false);
+      ws.onopen = () => setWsClosed(false);
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data as string);
+          if (typeof data.sender_id === "number" && typeof data.content === "string") {
+            const senderKey = String(data.sender_id);
+            const newMsg: ChatMessage = {
+              senderId: data.sender_id,
+              content: data.content,
+              isOwn: false,
             };
-          });
+            setMessagesByUserId((prev) => {
+              const existing = prev[senderKey] ?? [];
+              return {
+                ...prev,
+                [senderKey]: [...existing, newMsg],
+              };
+            });
+          }
+        } catch {
+          // ignore non-JSON or invalid
         }
-      } catch {
-        // ignore non-JSON or invalid
-      }
+      };
+      ws.onclose = () => {
+        wsRef.current = null;
+        setWsClosed(true);
+        reconnectTimeoutRef.current = setTimeout(connect, 2000);
+      };
+      ws.onerror = () => {};
     };
-    ws.onclose = () => {
-      wsRef.current = null;
-    };
+
+    connect();
     return () => {
-      ws.close();
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      const ws = wsRef.current;
+      if (ws) ws.close();
       wsRef.current = null;
     };
   }, [currentUser]);
@@ -176,7 +190,10 @@ export default function Dashboard() {
     (content: string) => {
       if (!selectedId || !currentUser) return;
       const ws = wsRef.current;
-      if (ws?.readyState !== WebSocket.OPEN) return;
+      if (ws?.readyState !== WebSocket.OPEN) {
+        setWsClosed(true);
+        return;
+      }
       const receiverId = Number(selectedId);
       ws.send(JSON.stringify({ receiver_id: receiverId, message: content }));
       setMessagesByUserId((prev) => ({
@@ -328,12 +345,18 @@ export default function Dashboard() {
                   )}
                 <div ref={messagesEndRef} />
                 </div>
+                {wsClosed && (
+                  <p className="shrink-0 px-3 py-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 border-t border-amber-200 dark:border-amber-800">
+                    Connection lost. Reconnecting…
+                  </p>
+                )}
                 <div className="shrink-0 p-3 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80">
                   <MessageComposer
                     placeholder="Type a message…"
                     sendLabel="Send"
                     onSubmit={sendMessage}
                     showAttachment={false}
+                    disabled={wsClosed}
                   />
                 </div>
               </>
