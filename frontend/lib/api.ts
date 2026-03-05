@@ -180,6 +180,10 @@ export const users = {
   /** PUT /users/:id — update user (auth required, own user only) */
   update: (userId: number, body: UserUpdateBody) =>
     put<UserResponse>(`/users/${userId}`, body),
+
+  /** POST /users/logout — invalidate session (client should clear token after). Auth required. */
+  logout: () =>
+    post<{ message: string }>("/users/logout"),
 };
 
 // --- Messages API (for listing; sending is via WebSocket) ---
@@ -189,14 +193,58 @@ export interface MessageResponse {
   sender_id: number;
   receiver_id: number;
   content: string;
+  media_url?: string | null;
   created_at: string;
 }
 
 export const messages = {
-  /** GET /messages/ — list messages for current user (auth required). Use to verify DB in Network tab. */
+  /** GET /messages/ — list messages for current user (auth required). */
   list: (params?: { with_user_id?: number; limit?: number }) =>
     get<MessageResponse[]>("/messages/", params as Record<string, number>),
 };
+
+/** Full URL for a media path returned by the API (e.g. /uploads/xxx.jpg). Use for img src. */
+export function getMediaUrl(path: string): string {
+  const base = getBaseUrl();
+  if (!base || !path) return "";
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${p}`;
+}
+
+/** Upload an image for chat. Returns { url: "/uploads/xxx.jpg" }. Auth required. */
+export async function uploadMedia(
+  file: File
+): Promise<{ data: { url: string }; ok: true } | { ok: false; error: ApiError }> {
+  const base = getBaseUrl();
+  if (!base) {
+    return { ok: false, error: { status: 0, message: "Client misconfigured: missing NEXT_PUBLIC_API_URL." } };
+  }
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem(ACCESS_TOKEN_KEY) : null;
+  if (!token) {
+    return { ok: false, error: { status: 401, message: "Not authenticated." } };
+  }
+  const url = `${base}${API_PREFIX}/media/upload`;
+  const form = new FormData();
+  form.append("file", file);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const message =
+        typeof body?.detail === "string" ? body.detail : res.statusText || "Upload failed";
+      return { ok: false, error: { status: res.status, message, detail: body } };
+    }
+    return { ok: true, data: { url: body.url ?? "" } };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Upload failed";
+    return { ok: false, error: { status: 0, message } };
+  }
+}
 
 /**
  * WebSocket URL for chat. Pass the JWT token (e.g. from localStorage).

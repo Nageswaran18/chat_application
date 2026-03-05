@@ -42,11 +42,17 @@ async def websocket_endpoint(
                 print(f"[WS] invalid receiver_id from user_id={user_id}: {data!r}")  # visible in terminal
                 continue
             content = str(data.get("message", "")).strip()
-            if not content:
+            media_url = data.get("media_url")
+            if isinstance(media_url, str):
+                media_url = media_url.strip() or None
+            else:
+                media_url = None
+            if not content and not media_url:
                 continue
 
-            logger.info("WS message received: sender_id=%s receiver_id=%s content=%r", user_id, receiver_id, content[:50])
-            print(f"[WS] message received: sender={user_id} receiver={receiver_id} content={content[:50]!r}")  # visible in terminal
+            logger.info("WS message received: sender_id=%s receiver_id=%s content=%r media_url=%s", user_id, receiver_id, content[:50] if content else "", media_url)
+            content_preview = (content[:50] if content else "(media)")
+            print(f"[WS] message received: sender={user_id} receiver={receiver_id} content={content_preview!r} media_url={media_url!r}")
 
             # Store message in database (individual message table)
             db = SessionLocal()
@@ -54,7 +60,8 @@ async def websocket_endpoint(
                 msg = Message(
                     sender_id=user_id,
                     receiver_id=receiver_id,
-                    content=content,
+                    content=content or "",
+                    media_url=media_url,
                 )
                 db.add(msg)
                 db.commit()
@@ -67,9 +74,9 @@ async def websocket_endpoint(
             finally:
                 db.close()
 
-            # Send to receiver if connected (JSON so UI can show sender and content)
+            # Send to receiver in real time (JSON with content and optional media_url)
             await manager.send_personal_message(
-                {"sender_id": user_id, "content": content},
+                {"sender_id": user_id, "content": content or "", "media_url": media_url},
                 receiver_id,
             )
 

@@ -1,6 +1,9 @@
 import sys
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import get_settings
 
@@ -13,6 +16,7 @@ except ImportError:
 from app.db.database import Base, engine
 from app.routes import user as user_routes
 from app.routes import messages as messages_routes
+from app.routes import media as media_routes
 from app.websocket import chat as ws_chat
 from app.models.message import Message  # noqa: F401 - register for create_all
 
@@ -38,7 +42,14 @@ app.add_middleware(
 
 app.include_router(user_routes.router, prefix="/api/v1")
 app.include_router(messages_routes.router, prefix="/api/v1")
-app.include_router(ws_chat.router, tags=["websocket"])
+app.include_router(media_routes.router, prefix="/api/v1")
+# WebSocket chat endpoint at /ws/chat (no /api/v1 prefix)
+app.include_router(ws_chat.router)
+
+# Serve uploaded images at /uploads (for chat media)
+uploads_dir = Path(__file__).resolve().parents[1] / "uploads"
+uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 Base.metadata.create_all(bind=engine)
 @app.get("/")

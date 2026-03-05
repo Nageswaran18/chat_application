@@ -4,6 +4,8 @@ import type { ChangeEvent } from "react";
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { SearchBar, Button, ThemeToggle } from "@/components/ui";
+import LoadingIndicator from "@/components/ui/LoadingIndicator";
+import { LogOut } from "lucide-react";
 import MessageComposer from "@/components/chat/MessageComposer";
 import ConversationFilterTabs, {
   type ConversationFilterType,
@@ -11,9 +13,9 @@ import ConversationFilterTabs, {
 import ConversationList, {
   type ConversationItem,
 } from "@/components/chat/ConversationList";
-import { users, messages, ACCESS_TOKEN_KEY, getWebSocketChatUrl, type UserResponse } from "@/lib/api";
+import { users, messages, uploadMedia, getMediaUrl, ACCESS_TOKEN_KEY, getWebSocketChatUrl, type UserResponse } from "@/lib/api";
 
-export type ChatMessage = { senderId: number; content: string; isOwn: boolean };
+export type ChatMessage = { senderId: number; content: string; isOwn: boolean; mediaUrl?: string | null };
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -39,6 +41,7 @@ export default function Dashboard() {
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -96,12 +99,15 @@ export default function Dashboard() {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data as string);
-          if (typeof data.sender_id === "number" && typeof data.content === "string") {
+          if (typeof data.sender_id === "number") {
             const senderKey = String(data.sender_id);
+            const content = typeof data.content === "string" ? data.content : "";
+            const mediaUrl = typeof data.media_url === "string" ? data.media_url : undefined;
             const newMsg: ChatMessage = {
               senderId: data.sender_id,
-              content: data.content,
+              content,
               isOwn: false,
+              mediaUrl: mediaUrl || undefined,
             };
             setMessagesByUserId((prev) => {
               const existing = prev[senderKey] ?? [];
@@ -135,7 +141,9 @@ export default function Dashboard() {
   // Load message history when user selects a conversation (so refresh shows messages)
   useEffect(() => {
     if (!currentUser || !selectedId) return;
-    setMessagesLoading(true);
+    setTimeout(() => {
+      setMessagesLoading(true);
+    }, 0);
     messages
       .list({ with_user_id: Number(selectedId), limit: 200 })
       .then((result) => {
@@ -146,12 +154,13 @@ export default function Dashboard() {
             senderId: m.sender_id,
             content: m.content,
             isOwn: m.sender_id === currentUser.id,
+            mediaUrl: m.media_url ?? undefined,
           }))
           .reverse();
         setMessagesByUserId((prev) => {
           const existing = prev[selectedId] ?? [];
-          const seen = new Set(fromApi.map((m) => `${m.senderId}:${m.content}`));
-          const extra = existing.filter((m) => !seen.has(`${m.senderId}:${m.content}`));
+          const seen = new Set(fromApi.map((m) => `${m.senderId}:${m.content}:${m.mediaUrl ?? ""}`));
+          const extra = existing.filter((m) => !seen.has(`${m.senderId}:${m.content}:${m.mediaUrl ?? ""}`));
           return { ...prev, [selectedId]: [...fromApi, ...extra] };
         });
       })
@@ -181,13 +190,17 @@ export default function Dashboard() {
 
   const selectedMessages = selectedId ? messagesByUserId[selectedId] ?? [] : [];
 
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
   // Scroll to bottom when new messages arrive (so receiver sees new message)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [selectedMessages.length]);
+    scrollToBottom();
+  }, [selectedMessages.length, scrollToBottom]);
 
   const sendMessage = useCallback(
-    (content: string) => {
+    (content: string, mediaUrl?: string | null) => {
       if (!selectedId || !currentUser) return;
       const ws = wsRef.current;
       if (ws?.readyState !== WebSocket.OPEN) {
@@ -195,22 +208,49 @@ export default function Dashboard() {
         return;
       }
       const receiverId = Number(selectedId);
-      ws.send(JSON.stringify({ receiver_id: receiverId, message: content }));
+      const payload: { receiver_id: number; message: string; media_url?: string } = {
+        receiver_id: receiverId,
+        message: content || "",
+      };
+      if (mediaUrl) payload.media_url = mediaUrl;
+      ws.send(JSON.stringify(payload));
       setMessagesByUserId((prev) => ({
         ...prev,
         [selectedId]: [
           ...(prev[selectedId] || []),
-          { senderId: currentUser.id, content, isOwn: true },
+          { senderId: currentUser.id, content: content || "", isOwn: true, mediaUrl: mediaUrl ?? undefined },
         ],
       }));
     },
     [selectedId, currentUser]
   );
 
+  const handleAttachImage = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file || !selectedId || !currentUser) return;
+      if (!file.type.startsWith("image/")) return;
+      const result = await uploadMedia(file);
+      if (result.ok && result.data.url) {
+        sendMessage("", result.data.url);
+      }
+    },
+    [selectedId, currentUser, sendMessage]
+  );
+
+  const handleLogout = useCallback(async () => {
+    await users.logout().catch(() => {}); // best effort; still clear local state
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+    }
+    router.replace("/login");
+  }, [router]);
+
   if (userLoading) {
     return (
       <div className="app-shell app-shell-full flex flex-col items-center justify-center min-h-screen bg-zinc-100 dark:bg-zinc-950">
-        <p className="text-zinc-500 dark:text-zinc-400">Loading…</p>
+        <LoadingIndicator />
       </div>
     );
   }
@@ -254,9 +294,14 @@ export default function Dashboard() {
                 </p>
               </div>
               <ThemeToggle />
-              <Button variant="secondary" className="text-xs px-3 py-1 h-7 shrink-0">
-                New chat
-              </Button>
+              <button
+                type="button"
+                aria-label="Logout"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </header>
 
             <div className="space-y-3">
@@ -318,9 +363,9 @@ export default function Dashboard() {
               <>
                 <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3 custom-scroll">
                   {messagesLoading ? (
-                    <p className="text-zinc-500 dark:text-zinc-400 text-sm text-center py-4">
-                      Loading messages…
-                    </p>
+                    <div className="text-sm text-center py-4">
+                      <LoadingIndicator/>
+                    </div>
                   ) : selectedMessages.length === 0 ? (
                     <p className="text-zinc-500 dark:text-zinc-400 text-sm text-center py-4">
                       No messages yet. Say hello!
@@ -332,13 +377,28 @@ export default function Dashboard() {
                         className={`flex ${msg.isOwn ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${
+                          className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm flex flex-col gap-1.5 ${
                             msg.isOwn
                               ? "bg-emerald-500 text-white"
                               : "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
                           }`}
                         >
-                          {msg.content}
+                          {msg.mediaUrl && (
+                            <a
+                              href={getMediaUrl(msg.mediaUrl)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block rounded-lg overflow-hidden max-w-full"
+                            >
+                              <img
+                                src={getMediaUrl(msg.mediaUrl)}
+                                alt="Shared"
+                                className="max-h-64 w-auto object-contain rounded-lg"
+                                onLoad={scrollToBottom}
+                              />
+                            </a>
+                          )}
+                          {msg.content ? <span>{msg.content}</span> : null}
                         </div>
                       </div>
                     ))
@@ -351,11 +411,20 @@ export default function Dashboard() {
                   </p>
                 )}
                 <div className="shrink-0 p-3 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    aria-hidden
+                    onChange={handleAttachImage}
+                  />
                   <MessageComposer
                     placeholder="Type a message…"
                     sendLabel="Send"
                     onSubmit={sendMessage}
-                    showAttachment={false}
+                    showAttachment={true}
+                    onAttachClick={() => fileInputRef.current?.click()}
                     disabled={wsClosed}
                   />
                 </div>

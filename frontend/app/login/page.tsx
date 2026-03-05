@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Input, Button, ThemeToggle } from "@/components/ui";
+import LoadingIndicator from "@/components/ui/LoadingIndicator";
 import { users, ACCESS_TOKEN_KEY } from "@/lib/api";
 
 export default function LoginPage() {
@@ -70,7 +71,7 @@ export default function LoginPage() {
   if (checkingToken) {
     return (
       <div className="app-shell flex items-center justify-center min-h-screen bg-zinc-100 dark:bg-zinc-950">
-        <p className="text-zinc-500 dark:text-zinc-400">Loading…</p>
+        <LoadingIndicator />
       </div>
     );
   }
@@ -84,26 +85,25 @@ export default function LoginPage() {
         <section className="text-zinc-800 dark:text-zinc-100">
           <p className="inline-flex items-center gap-2 rounded-full border border-zinc-300 dark:border-zinc-700 bg-zinc-200/80 dark:bg-zinc-900/40 px-3 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 mb-5">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Realtime chat · Secure by default
+            Simple · Private · Free
           </p>
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-3">
-            Welcome back to your{" "}
+            Stay in touch with{" "}
             <span className="bg-gradient-to-r from-emerald-500 via-sky-500 to-emerald-400 bg-clip-text text-transparent">
-              realtime inbox
+              everyone you know
             </span>
           </h1>
           <p className="text-sm md:text-base text-zinc-600 dark:text-zinc-400 max-w-md mb-6">
-            Log in to pick up conversations where you left off, share files, and
-            jump into calls instantly.
+            Sign in to send messages, see your chats, and keep the conversation going—anytime, anywhere.
           </p>
           <div className="flex flex-wrap gap-3 text-xs text-zinc-500 dark:text-zinc-400">
             <div className="inline-flex items-center gap-2 rounded-full border border-zinc-300 dark:border-zinc-700 bg-zinc-200/60 dark:bg-zinc-900/60 px-3 py-1">
               <span className="inline-block h-5 w-5 rounded-full bg-emerald-500/80" />
-              End-to-end ready
+              Private & secure
             </div>
             <div className="inline-flex items-center gap-2 rounded-full border border-zinc-300 dark:border-zinc-700 bg-zinc-200/60 dark:bg-zinc-900/60 px-3 py-1">
               <span className="inline-block h-5 w-5 rounded-full bg-emerald-500/80" />
-              Presence & typing indicators
+              Instant messaging
             </div>
           </div>
         </section>
@@ -114,7 +114,7 @@ export default function LoginPage() {
               Sign in
             </h2>
             <p className="text-zinc-500 dark:text-zinc-400 mt-1.5 text-sm">
-              Use the credentials you registered with to access your workspace.
+              Enter your email and password to access your account.
             </p>
           </header>
 
@@ -158,23 +158,24 @@ export default function LoginPage() {
               variant="primary"
               fullWidth
               loading={isSubmitting}
-              loadingLabel="Signing you in…"
+              loadingLabel="Signing in…"
               className="mt-1 min-h-12 h-12 text-sm font-medium"
             >
-              Continue to dashboard
+              Sign in
             </Button>
           </form>
 
           <p className="mt-4 text-center text-xs text-zinc-500 dark:text-zinc-400">
-            By continuing you agree to our{" "}
-            <span className="underline underline-offset-4 decoration-zinc-400 dark:decoration-zinc-500">
-              Terms
-            </span>{" "}
-            and{" "}
-            <span className="underline underline-offset-4 decoration-zinc-400 dark:decoration-zinc-500">
-              Privacy Policy
-            </span>
-            .
+            New here?{" "}
+            <a href="/register" className="font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
+              Create an account
+            </a>
+          </p>
+          <p className="mt-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
+            By signing in you agree to our{" "}
+            <span className="underline underline-offset-4 decoration-zinc-400 dark:decoration-zinc-500">Terms</span>
+            {" "}and{" "}
+            <span className="underline underline-offset-4 decoration-zinc-400 dark:decoration-zinc-500">Privacy Policy</span>.
           </p>
         </section>
       </div>

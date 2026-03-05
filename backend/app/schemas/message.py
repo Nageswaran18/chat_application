@@ -7,6 +7,7 @@ class MessageResponse(BaseModel):
     sender_id: int
     receiver_id: int
     content: str
+    media_url: str | None = None
     created_at: datetime
 
     class Config:

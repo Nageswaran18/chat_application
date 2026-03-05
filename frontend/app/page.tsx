@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ACCESS_TOKEN_KEY } from "@/lib/api";
+import LoadingIndicator from "@/components/ui/LoadingIndicator";
 
 /**
  * Home: redirect to dashboard if logged in, otherwise to login.
@@ -23,7 +24,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-100 dark:bg-zinc-950">
-      <p className="text-zinc-500 dark:text-zinc-400">Loading…</p>
+      <LoadingIndicator />
     </div>
   );
 }
