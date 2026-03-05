@@ -161,3 +161,11 @@ def login(
         db.commit()
     access_token = create_access_token(data={"sub": str(user.id)})
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+
+@router.post("/logout")
+def logout(current_user: User = Depends(get_current_user)):
+    """Logout the current user."""
+    return {"message": "Logged out successfully"}
+
