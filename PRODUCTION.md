@@ -26,9 +26,14 @@ Set these in your host (e.g. Railway, Render, Fly.io, Docker, or server env). **
     (or your actual Vercel URL; comma-separate if you have multiple, e.g. `https://app.com,https://www.app.com`)
   - After adding or changing env vars, **redeploy** the backend so it picks them up.
 
-### 2. Database
+### 2. Database and migrations
 
-- Run migrations before first deploy: `alembic upgrade head` (from backend root).
+- **Run migrations in production** whenever the schema changes (e.g. new columns like `media_url`).
+  - One-time fix if you see `column messages.media_url does not exist`:
+    - From your machine (with production `DATABASE_URL` set):  
+      `cd backend && alembic upgrade head`
+    - Or run the same inside the deployment environment (e.g. one-off container or your host’s shell) so it uses the production DB.
+  - Prefer running migrations as part of every deploy (e.g. Dockerfile or release script runs `alembic upgrade head` before starting the app) so new columns are always applied.
 - Prefer a managed PostgreSQL (e.g. Neon, Supabase, RDS) with backups and SSL.
 - In production, use a connection pool; your app already uses `pool_pre_ping=True`.
 
